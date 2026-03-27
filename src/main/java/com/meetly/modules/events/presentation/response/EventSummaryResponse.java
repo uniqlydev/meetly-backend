@@ -17,6 +17,7 @@ public record EventSummaryResponse(
         EventStatus eventStatus,
         boolean approvalRequired,
         Long hostId,
+        String hostUsername,
         String hostName
 ) {
     public static EventSummaryResponse from(Event event) {
@@ -31,6 +32,7 @@ public record EventSummaryResponse(
                 event.getEventStatus(),
                 event.isApprovalRequired(),
                 event.getHost().getId(),
+                event.getHost().getUsername(),
                 event.getHost().getName()
         );
     }

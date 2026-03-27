@@ -33,7 +33,8 @@ public class AuthController {
         return new SignUpResponse(
                 "Sign up successful. Please verify your email with the confirmation code.",
                 username,
-                request.email()
+                request.email(),
+                null
         );
     }
 

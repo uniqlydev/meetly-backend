@@ -19,6 +19,8 @@ import com.meetly.shared.domain.DomainException;
 
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserResponse;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AuthFlowType;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AuthenticationResultType;
@@ -147,6 +149,38 @@ public class CognitoService {
         }
     }
 
+    public CognitoUserProfile getUserProfile(String username) {
+        try {
+            AdminGetUserResponse response = cognitoClient.adminGetUser(
+                    AdminGetUserRequest.builder()
+                            .userPoolId(cognitoProperties.getUserPoolId())
+                            .username(username)
+                            .build()
+            );
+
+            Map<String, String> attrs = new HashMap<>();
+            for (AttributeType attr : response.userAttributes()) {
+                attrs.put(attr.name(), attr.value());
+            }
+
+            return new CognitoUserProfile(
+                    attrs.get("sub"),
+                    response.username(),
+                    attrs.get("email"),
+                    attrs.get("given_name"),
+                    attrs.get("family_name")
+            );
+        } catch (CognitoIdentityProviderException | SdkClientException ex) {
+            log.error(
+                    "Cognito adminGetUser failed [username={}]: {}",
+                    username,
+                    describeCognitoException(ex),
+                    ex
+            );
+            throw new DomainException(cleanMessage(ex));
+        }
+    }
+
     private String buildSecretHash(String username) {
         if (!StringUtils.hasText(cognitoProperties.getClientSecret())) {
             return null;
@@ -221,5 +255,14 @@ public class CognitoService {
         }
 
         return ex.getMessage();
+    }
+
+    public record CognitoUserProfile(
+            String sub,
+            String username,
+            String email,
+            String givenName,
+            String familyName
+    ) {
     }
 }

@@ -33,11 +33,12 @@ public class IdentityController {
     @GetMapping("/me")
     public UserProfileResponse me(
             @RequestHeader(value = "X-User-Id", defaultValue = "dev-user-1") String externalAuthId,
+            @RequestHeader(value = "X-User-Username", defaultValue = "dev-user-1") String username,
             @RequestHeader(value = "X-User-Email", defaultValue = "dev1@meetly.app") String email,
             @RequestHeader(value = "X-User-Name", defaultValue = "Brendan") String name
     ) {
         identityCommandService.upsertUser(
-                new UpsertUserCommand(externalAuthId, email, name)
+                new UpsertUserCommand(externalAuthId, username, email, name)
         );
 
         return identityResponseMapper.toResponse(

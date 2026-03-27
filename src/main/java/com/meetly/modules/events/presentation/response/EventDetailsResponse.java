@@ -17,6 +17,7 @@ public record EventDetailsResponse(
         EventStatus eventStatus,
         boolean approvalRequired,
         Long hostId,
+        String hostUsername,
         String hostName,
         String hostEmail
 ) {
@@ -32,6 +33,7 @@ public record EventDetailsResponse(
                 event.getEventStatus(),
                 event.isApprovalRequired(),
                 event.getHost().getId(),
+                event.getHost().getUsername(),
                 event.getHost().getName(),
                 event.getHost().getEmail()
         );

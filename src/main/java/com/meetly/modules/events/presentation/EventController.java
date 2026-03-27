@@ -46,11 +46,12 @@ public class EventController {
     @PostMapping
     public EventDetailsResponse createEvent(
             @Valid @RequestBody CreateEventRequest request,
-            @RequestHeader(value = "X-User-Id") String externalAuthId
+            @RequestHeader(value = "X-User-Id", required = false) String externalAuthId,
+            @RequestHeader(value = "X-User-Username", required = false) String username
     ) {
         Event event = eventCommandService.createEvent(
                 new CreateEventCommand(
-                        externalAuthId,
+                        resolveAuthIdentifier(externalAuthId, username),
                         request.title(),
                         request.description(),
                         request.locationText(),
@@ -82,8 +83,21 @@ public class EventController {
     @PatchMapping("/{eventId}/cancel")
     public void cancelEvent(
             @PathVariable Long eventId,
-            @RequestHeader(value = "X-User-Id") String externalAuthId
+                        @RequestHeader(value = "X-User-Id", required = false) String externalAuthId,
+                        @RequestHeader(value = "X-User-Username", required = false) String username
     ) {
-        eventCommandService.cancelEvent(new CancelEventCommand(eventId, externalAuthId));
+                eventCommandService.cancelEvent(new CancelEventCommand(eventId, resolveAuthIdentifier(externalAuthId, username)));
+        }
+
+        private String resolveAuthIdentifier(String externalAuthId, String username) {
+                if (externalAuthId != null && !externalAuthId.isBlank()) {
+                        return externalAuthId;
+                }
+
+                if (username != null && !username.isBlank()) {
+                        return username;
+                }
+
+                throw new com.meetly.shared.domain.DomainException("Missing authenticated user header");
     }
 }

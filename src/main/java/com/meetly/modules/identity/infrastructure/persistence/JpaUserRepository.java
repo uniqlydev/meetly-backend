@@ -10,6 +10,7 @@ import com.meetly.modules.identity.domain.UserRepository;
 
 interface SpringDataUserRepository extends JpaRepository<User, Long> {
     Optional<User> findByExternalAuthId(String externalAuthId);
+    Optional<User> findByUsername(String username);
 }
 
 @Repository
@@ -24,6 +25,11 @@ public class JpaUserRepository implements UserRepository {
     @Override
     public Optional<User> findByExternalAuthId(String externalAuthId) {
         return springDataUserRepository.findByExternalAuthId(externalAuthId);
+    }
+
+    @Override
+    public Optional<User> findByUsername(String username) {
+        return springDataUserRepository.findByUsername(username);
     }
 
     @Override

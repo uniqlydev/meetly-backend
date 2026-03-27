@@ -24,8 +24,8 @@ public class EventCommandService {
 
     @Transactional
     public Event createEvent(CreateEventCommand command) {
-        User host = userRepository.findByExternalAuthId(command.externalAuthId())
-                .orElseThrow(() -> new DomainException("Host user not found"));
+        User host = resolveUser(command.externalAuthId())
+            .orElseThrow(() -> new DomainException("Host user not found"));
 
         Event event = Event.create(
                 host,
@@ -46,9 +46,14 @@ public class EventCommandService {
         Event event = eventRepository.findById(command.eventId())
                 .orElseThrow(() -> new DomainException("Event not found"));
 
-        User actingUser = userRepository.findByExternalAuthId(command.externalAuthId())
-                .orElseThrow(() -> new DomainException("User not found"));
+        User actingUser = resolveUser(command.externalAuthId())
+            .orElseThrow(() -> new DomainException("User not found"));
 
         event.cancel(actingUser.getId());
     }
+
+        private java.util.Optional<User> resolveUser(String authIdentifier) {
+        return userRepository.findByExternalAuthId(authIdentifier)
+            .or(() -> userRepository.findByUsername(authIdentifier));
+        }
 }

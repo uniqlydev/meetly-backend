@@ -16,6 +16,9 @@ public class User extends BaseEntity {
     @Column(name = "external_auth_id", nullable = false, unique = true, length = 120)
     private String externalAuthId;
 
+    @Column(length = 120, unique = true)
+    private String username;
+
     @Column(nullable = false, unique = true, length = 120)
     private String email;
 
@@ -34,15 +37,16 @@ public class User extends BaseEntity {
     protected User() {
     }
 
-    private User(String externalAuthId, String email, String name) {
+    private User(String externalAuthId, String username, String email, String name) {
         this.externalAuthId = externalAuthId;
+        this.username = username;
         this.email = email;
         this.name = name;
         this.verified = false;
     }
 
-    public static User create(String externalAuthId, String email, String name) {
-        return new User(externalAuthId, email, name);
+    public static User create(String externalAuthId, String username, String email, String name) {
+        return new User(externalAuthId, username, email, name);
     }
 
     public void updateBasicProfile(String name, String bio, String profileImageUrl) {
@@ -51,12 +55,23 @@ public class User extends BaseEntity {
         this.profileImageUrl = profileImageUrl;
     }
 
+    public void syncAuthProfile(String externalAuthId, String username, String email, String name) {
+        this.externalAuthId = externalAuthId;
+        this.username = username;
+        this.email = email;
+        this.name = name;
+    }
+
     public Long getId() {
         return id;
     }
 
     public String getExternalAuthId() {
         return externalAuthId;
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     public String getEmail() {

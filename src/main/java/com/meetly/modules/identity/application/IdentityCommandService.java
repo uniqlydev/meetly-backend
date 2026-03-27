@@ -2,6 +2,7 @@ package com.meetly.modules.identity.application;
 
 
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.meetly.modules.identity.application.command.UpsertUserCommand;
@@ -20,12 +21,37 @@ public class IdentityCommandService {
     @Transactional
     public User upsertUser(UpsertUserCommand command) {
         return userRepository.findByExternalAuthId(command.externalAuthId())
-                .orElseGet(() -> userRepository.save(
-                        User.create(
-                                command.externalAuthId(),
-                                command.email(),
-                                command.name()
-                        )
-                ));
+                .map(existingUser -> updateExisting(existingUser, command))
+                .orElseGet(() -> userRepository.findByUsername(command.username())
+                        .map(existingUser -> updateExisting(existingUser, command))
+                        .orElseGet(() -> createIfAbsent(command)));
+    }
+
+    private User updateExisting(User existingUser, UpsertUserCommand command) {
+        existingUser.syncAuthProfile(
+                command.externalAuthId(),
+                command.username(),
+                command.email(),
+                command.name()
+        );
+        return userRepository.save(existingUser);
+    }
+
+    private User createIfAbsent(UpsertUserCommand command) {
+        try {
+            return userRepository.save(
+                User.create(
+                    command.externalAuthId(),
+                    command.username(),
+                    command.email(),
+                    command.name()
+                )
+            );
+        } catch (DataIntegrityViolationException ex) {
+            // Another concurrent request inserted the same externalAuthId first.
+            return userRepository.findByExternalAuthId(command.externalAuthId())
+                .or(() -> userRepository.findByUsername(command.username()))
+                .orElseThrow(() -> ex);
+        }
     }
 }
